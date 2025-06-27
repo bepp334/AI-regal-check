@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse, Part } from "@google/genai";
 import { GeminiStage1Response, GeminiStage2Response } from '../types';
 
@@ -124,6 +123,27 @@ const runStage2_FactFindAndReport = async (params: Stage2Params): Promise<Gemini
     recheckPrompt
   } = params;
 
+  // 参照URLから本文テキストを取得
+  let scrapedTexts = '';
+  if (referenceUrls) {
+    const urls = (referenceUrls || '').split(/\s+/).filter(Boolean);
+    const results: string[] = [];
+    for (const url of urls) {
+      try {
+        const res = await fetch(`http://localhost:3001/scrape?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        if (data.text) {
+          results.push(`【${url}】\n${data.text.substring(0, 3000)}...`); // 3000文字制限
+        } else {
+          results.push(`【${url}】\n取得失敗: ${data.error || '不明なエラー'}`);
+        }
+      } catch (e) {
+        results.push(`【${url}】\n取得失敗: ${(e instanceof Error) ? e.message : String(e)}`);
+      }
+    }
+    scrapedTexts = results.join('\n\n');
+  }
+
   let contextMessage = `
 あなたは既にステップ1とステップ2のOCR部分を完了しています。
 最終的な \`ad_text\` (CSV/直接入力と確認済みOCRから結合されたもの) は以下の通りです:
@@ -131,8 +151,11 @@ const runStage2_FactFindAndReport = async (params: Stage2Params): Promise<Gemini
 ${finalAdText}
 \`\`\`
 
-ユーザーから提供された参照URLは: ${referenceUrls || '提供なし'}
-ユーザーから提供されたクライアント共有情報は: ${clientSharedInfo || '提供なし'}
+【スクレイピング取得結果】
+${scrapedTexts}
+
+ユーザーから提供された参照URLは: ${(referenceUrls || '') || '提供なし'}
+ユーザーから提供されたクライアント共有情報は: ${(clientSharedInfo || '') || '提供なし'}
 `;
 
   if (recheckPrompt) {
@@ -174,10 +197,7 @@ ${finalAdText}
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
         model: GEMINI_MODEL_NAME,
-        contents: [{text: fullPromptForStage2}],
-        config: { // リアルタイムでのウェブ情報取得のためにGoogle Searchツールを有効化
-          tools: [{googleSearch: {}}],
-        }
+        contents: [{text: fullPromptForStage2}]
     });
     return { text: response.text };
   } catch (e) {
