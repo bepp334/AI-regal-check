@@ -1,0 +1,8 @@
+{
+  "name": "AI広告リーガルチェックツール(6/25作成分)",
+  "description": "AIによる広告文の自動チェックツールです。",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
