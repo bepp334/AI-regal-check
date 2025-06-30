@@ -7,7 +7,7 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "fallback_or_handle_error_gracefully" });
 const GEMINI_MODEL_NAME_FLASH = 'gemini-2.5-flash-preview-04-17';
-const GEMINI_MODEL_NAME_PRO = 'gemini-2.5-pro-latest';
+const GEMINI_MODEL_NAME_PRO = 'gemini-2.5-pro';
 
 interface Stage1Params {
   mainSystemPrompt: string;
