@@ -6,7 +6,8 @@ if (!process.env.API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "fallback_or_handle_error_gracefully" });
-const GEMINI_MODEL_NAME = 'gemini-2.5-pro-latest';
+const GEMINI_MODEL_NAME_FLASH = 'gemini-2.5-flash-preview-04-17';
+const GEMINI_MODEL_NAME_PRO = 'gemini-2.5-pro-latest';
 
 interface Stage1Params {
   mainSystemPrompt: string;
@@ -97,7 +98,7 @@ const runStage1_AdTextAndOCR = async (params: Stage1Params): Promise<GeminiStage
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
+      model: GEMINI_MODEL_NAME_FLASH,
       contents: contents,
     });
     return { text: response.text };
@@ -196,7 +197,7 @@ ${scrapedTexts}
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: GEMINI_MODEL_NAME,
+        model: GEMINI_MODEL_NAME_PRO,
         contents: [{text: fullPromptForStage2}]
     });
     return { text: response.text };
